@@ -1,17 +1,18 @@
 import express from 'express';
 
 class HomeController {
-  constructor() {
+  constructor(handlebars) {
     this.router = express.Router();
+    this.handlebars = handlebars;
   }
 
   defineRoutes() {
     this.router.get('/', function (request, response) {
-      response.send('Home page! <a href="/login">Log In!</a>');
+      response.render('home');
     });
 
     this.router.get('/login', function(request, response) {
-      response.send('Login page! <a href="/">Home!</a>');
+      response.render('login');
     });
   }
 

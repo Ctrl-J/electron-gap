@@ -9,6 +9,7 @@
   "author": "Jordan Marsh",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "express-handlebars": "^2.0.1"
   }
 }
