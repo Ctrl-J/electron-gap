@@ -2,7 +2,7 @@ import express from 'express';
 import handlebars from 'express-handlebars';
 import path from 'path';
 
-import HomeController from './routers/HomeController';
+import HomeController from './controllers/HomeController';
 
 class Web {
   constructor(logic, config) {

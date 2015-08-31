@@ -29,3 +29,5 @@ node_modules
 
 # ignore compiled assets
 web/assets/**/*.css
+web/assets/**/*.js
+web/assets/**/*.map
