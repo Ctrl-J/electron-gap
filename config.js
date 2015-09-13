@@ -1,8 +1,8 @@
-export default {
-  application: {
-    port: process.env.EGAP_APP_PORT || 3000
-  },
+module.exports = {
   api: {
-    port: process.env.EGAP_API_PORT || 6000
+    port: 3000
+  },
+  web: {
+    port: 4000
   }
 };
