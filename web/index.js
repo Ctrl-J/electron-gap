@@ -42,7 +42,6 @@ class Web {
             }
           },
           (error, apiResponse, body) => {
-            console.log(apiResponse);
             response.send(body);
           }
         );
