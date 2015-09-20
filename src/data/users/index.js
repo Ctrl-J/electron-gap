@@ -4,29 +4,38 @@ const Immutable = require('immutable');
 
 const users = {
   createUser(newUserDetails) {
+    let userDetails = newUserDetails;
     if (Immutable.Map.isMap(newUserDetails)) {
-      newUserDetails = newUserDetails.toObject();
+      userDetails = newUserDetails.toObject();
     }
 
     return new Promise(
       (resolve, reject) => {
-        if (!newUserDetails.hasOwnProperty('username')) {
+        if (!userDetails.hasOwnProperty('username')) {
           reject('createUser requires the "username" parameter to be set');
         }
 
-        if (!newUserDetails.hasOwnProperty('hash')) {
+        if (!userDetails.hasOwnProperty('hash')) {
           reject('createUser requires the "hash" parameter to be set');
         }
 
-        if (!newUserDetails.hasOwnProperty('salt')) {
+        if (!userDetails.hasOwnProperty('salt')) {
           reject('createUser requires the "salt" parameter to be set');
         }
 
-        if (!newUserDetails.hasOwnProperty('createTime')) {
-          reject('createUser requires the "createTime" parameter to be set');
+        if (!userDetails.hasOwnProperty('createdAt')) {
+          reject('createUser requires the "createdAt" parameter to be set');
         }
 
-        if (!newUserDetails.hasOwnProperty('role')) {
+        if (!userDetails.hasOwnProperty('role')) {
+          reject('createUser requires the "role" parameter to be set');
+        }
+
+        if (!userDetails.hasOwnProperty('email')) {
+          reject('createUser requires the "email" parameter to be set');
+        }
+
+        if (!userDetails.hasOwnProperty('role')) {
           reject('createUser requires the "role" parameter to be set');
         }
       }

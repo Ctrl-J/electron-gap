@@ -7,8 +7,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node ./bin/server.js",
-    "pretest": "node ./test/db-setup.config.js",
-    "posttest": "node ./test/db-teardown.config.js",
+    "pretest": "node ./test/db-rebuild.config.js",
     "test": "mocha --compilers js:babel/register --require ./test/test_helper.js $(find test -name '*.spec.js')",
     "test:watch": "npm run test -- --watch"
   },
