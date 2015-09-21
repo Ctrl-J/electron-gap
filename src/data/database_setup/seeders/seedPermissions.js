@@ -1,11 +1,11 @@
 'use strict';
 
-const standaloneQuery = require('../../utility/standaloneQuery');
+const queries = require('../../utility/queries');
 
 module.exports = function seedPermissions(connectionString) {
   return new Promise(
     (resolve, reject) => {
-      standaloneQuery(
+      queries.simple(
         connectionString,
         `INSERT INTO Roles ` +
         `VALUES ` +
@@ -21,7 +21,7 @@ module.exports = function seedPermissions(connectionString) {
            *  Permissions are grouped into three categories. By application feature,
            *  by action type, and by system actions
            */
-          return standaloneQuery(
+          return queries.simple(
             connectionString,
             `INSERT INTO Permissions ` +
             `VALUES ` +
@@ -57,7 +57,7 @@ module.exports = function seedPermissions(connectionString) {
         }
       ).then(
         () => {
-          return standaloneQuery(
+          return queries.simple(
             connectionString,
             `INSERT INTO RolePermissions ` +
             `VALUES ` +

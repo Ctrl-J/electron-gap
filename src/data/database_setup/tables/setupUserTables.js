@@ -1,10 +1,10 @@
 'use strict';
-const standaloneQuery = require('../../utility/standaloneQuery');
+const queries = require('../../utility/queries');
 
 module.exports = function setupUserTables(connectionString) {
   return new Promise(
     (resolve, reject) => {
-      standaloneQuery(
+      queries.simple(
         connectionString,
         `CREATE TABLE Permissions( ` +
         `key         TEXT PRIMARY KEY NOT NULL, ` +
@@ -12,7 +12,7 @@ module.exports = function setupUserTables(connectionString) {
         `);`
       ).then(
         () => {
-          return standaloneQuery(
+          return queries.simple(
             connectionString,
             `CREATE TABLE Roles( ` +
             `  key         TEXT PRIMARY KEY NOT NULL, ` +
@@ -22,7 +22,7 @@ module.exports = function setupUserTables(connectionString) {
         }
       ).then(
         () => {
-          return standaloneQuery(
+          return queries.simple(
             connectionString,
             `CREATE TABLE RolePermissions( ` +
             `  role_key        TEXT NOT NULL ` +
@@ -37,19 +37,21 @@ module.exports = function setupUserTables(connectionString) {
         }
       ).then(
         () => {
-          return standaloneQuery(
+          return queries.simple(
             connectionString,
             `CREATE TABLE Users( ` +
-            `  id          BIGSERIAL PRIMARY KEY NOT NULL, ` +
-            `  user_name   TEXT NOT NULL, ` +
-            `  first_name  TEXT, ` +
-            `  last_name   TEXT, ` +
-            `  email       TEXT UNIQUE NOT NULL, ` +
-            `  birthdate   DATE, ` +
-            `  hash        TEXT NOT NULL, ` +
-            `  salt        TEXT NOT NULL, ` +
-            `  created_at  TIMESTAMP NOT NULL, ` +
-            `  role_id     INT NOT NULL ` +
+            `  id             BIGSERIAL PRIMARY KEY NOT NULL, ` +
+            `  user_name      TEXT UNIQUE NOT NULL, ` +
+            `  first_name     TEXT, ` +
+            `  last_name      TEXT, ` +
+            `  email          TEXT UNIQUE NOT NULL, ` +
+            `  birthdate      DATE, ` +
+            `  hash           TEXT NOT NULL, ` +
+            `  salt           TEXT NOT NULL, ` +
+            `  created_at     TIMESTAMP NOT NULL, ` +
+            `  role_key       TEXT NOT NULL ` +
+            `      CONSTRAINT FK_User_RoleKey ` +
+            `      REFERENCES Roles(key) ` +
             `);`
           );
         }

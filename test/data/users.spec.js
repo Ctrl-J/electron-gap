@@ -1,7 +1,8 @@
 'use strict';
 import {Map} from 'immutable';
-import Data from '../../src/data';
-import config from '../../src/config';
+
+import Users from '../../src/data/users';
+import systemConfig from '../../src/config';
 import setupUserTables from '../../src/data/database_setup/tables/setupUserTables';
 import seedPermissions from '../../src/data/database_setup/seeders/seedPermissions';
 
@@ -17,8 +18,10 @@ const testAdmin = Map({
   role: 'admin'
 });
 
-const data = new Data();
-const connectionString = `postgres://${config.db.username}:${config.db.password}@${config.db.address}/electrongap_test`;
+const config = systemConfig;
+config.db.database = 'electrongap_test';
+const users = new Users(config);
+const connectionString = `postgres://${config.db.username}:${config.db.password}@${config.db.address}/${config.db.database}`;
 
 describe('User data access',
   () => {
@@ -53,7 +56,7 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('username');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "username" parameter to be set');
           }
@@ -63,7 +66,7 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('hash');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "hash" parameter to be set');
           }
@@ -73,7 +76,7 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('salt');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "salt" parameter to be set');
           }
@@ -83,7 +86,7 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('email');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "email" parameter to be set');
           }
@@ -93,7 +96,7 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('createdAt');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "createdAt" parameter to be set');
           }
@@ -103,9 +106,57 @@ describe('User data access',
           () => {
             const user = testAdmin.delete('role');
 
-            return data.users.createUser(user)
+            return users.createUser(user)
               .should.be
               .rejectedWith('createUser requires the "role" parameter to be set');
+          }
+        );
+
+        it('should throw an error on an invalid role',
+          () => {
+            const user = testAdmin.delete('role').set('role', 'samwise');
+
+            return users.createUser(user)
+              .should.be
+              .rejectedWith('createUser failed because role "samwise" does not exist');
+          }
+        );
+
+        it('should return an immutable user entry upon success',
+          () => {
+            return users.createUser(testAdmin)
+              .should.eventually.have.keys(
+                'id',
+                'username',
+                'firstName',
+                'lastName',
+                'email',
+                'birthdate',
+                'hash',
+                'salt',
+                'createdAt',
+                'role'
+              );
+          }
+        );
+
+        it('should throw an error on duplicate email address',
+          () => {
+            const user = testAdmin.delete('username').set('username', 'DifferentUser');
+
+            return users.createUser(user)
+              .should.eventually.be
+              .rejectedWith(`email "${user.get('email')}" is already registered to an account`);
+          }
+        );
+
+        it('should throw an error on a taken username',
+          () => {
+            const user = testAdmin.delete('email').set('email', 'differentEmail@mail.com');
+
+            return users.createUser(user)
+              .should.eventually.be
+              .rejectedWith(`username "${user.get('username')}" is already registered to an account`);
           }
         );
       }
