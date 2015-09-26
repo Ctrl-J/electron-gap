@@ -35,22 +35,19 @@ module.exports = {
           connectionString,
           (error, client, done) => {
             if (error) {
-              reject(error);
               done();
-              return;
+              return reject(error);
             }
 
             client.query(query, values,
               (queryError, result) => {
                 if (queryError) {
-                  reject(queryError);
                   done();
-                  return;
+                  return reject(queryError);
                 }
 
                 done();
-                resolve(result);
-                return;
+                return resolve(result);
               }
             );
           }

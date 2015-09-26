@@ -92,29 +92,8 @@ class Users {
           }
         ).then(
           (result) => {
-            const id = result.rows[0].id;
-            return queries.withParams(
-              connectionString,
-              `SELECT * FROM Users WHERE id = $1`,
-              [ id ]);
-          }
-        ).then(
-          (result) => {
-            const targetUser = result.rows[0];
-            return resolve(
-              Immutable.Map({
-                id: targetUser.id,
-                username: targetUser.user_name,
-                firstName: targetUser.first_name,
-                lastName: targetUser.last_name,
-                email: targetUser.email,
-                birthdate: targetUser.birthdate,
-                hash: targetUser.hash,
-                salt: targetUser.salt,
-                createdAt: targetUser.created_at,
-                role: targetUser.role_key
-              })
-            );
+            const id = parseInt(result.rows[0].id, 10);
+            return resolve(this.readUserById(id));
           }
         ).catch(
           (error) => {
@@ -134,7 +113,46 @@ class Users {
   }
 
   readUserById(userId) {
+    return new Promise(
+      (resolve, reject) => {
+        if ((typeof userId !== 'number') || ((userId % 1) !== 0)) {
+          return reject(new Error(`Invalid id entered (will never find "${userId}")`));
+        }
 
+        const connectionString = `postgresql://${this.config.db.username}:${this.config.db.password}@${this.config.db.address}/${this.config.db.database}`;
+
+        queries.withParams(
+          connectionString,
+          'SELECT * FROM Users WHERE Id = $1',
+          [ userId ]
+        ).then(
+          (result) => {
+            if (result.rowCount <= 0) {
+              return reject(new Error(`User not found (${userId})`));
+            }
+            const targetUser = result.rows[0];
+            return resolve(
+              Immutable.Map({
+                id: targetUser.id,
+                username: targetUser.user_name,
+                firstName: targetUser.first_name,
+                lastName: targetUser.last_name,
+                email: targetUser.email,
+                birthdate: targetUser.birthdate,
+                hash: targetUser.hash,
+                salt: targetUser.salt,
+                createdAt: targetUser.created_at,
+                role: targetUser.role_key
+              })
+            );
+          }
+        ).catch(
+          (error) => {
+            return reject(error);
+          }
+        );
+      }
+    );
   }
 
   updateUser(userDetails) {

@@ -50,7 +50,7 @@ describe('User data access',
       }
     );
 
-    describe('createAdmin',
+    describe('createUser',
       () => {
         it('should throw an error for missing username',
           () => {
@@ -157,6 +157,26 @@ describe('User data access',
             return users.createUser(user)
               .should.eventually.be
               .rejectedWith(`username "${user.get('username')}" is already registered to an account`);
+          }
+        );
+      }
+    );
+
+    describe('readUserById',
+      () => {
+        it('should throw an error on an invalid userId',
+          () => {
+            return users.readUserById('invalid id')
+              .should.be
+              .rejectedWith('Invalid id entered (will never find "invalid id")');
+          }
+        );
+
+        it('should throw an error for a non-existing user',
+          () => {
+            return users.readUserById(456789)
+              .should.be
+              .rejectedWith('User not found (456789)');
           }
         );
       }
