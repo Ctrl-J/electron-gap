@@ -40,18 +40,21 @@ module.exports = function setupUserTables(connectionString) {
           return queries.simple(
             connectionString,
             `CREATE TABLE Users( ` +
-            `  id             BIGSERIAL PRIMARY KEY NOT NULL, ` +
-            `  user_name      TEXT UNIQUE NOT NULL, ` +
-            `  first_name     TEXT, ` +
-            `  last_name      TEXT, ` +
-            `  email          TEXT UNIQUE NOT NULL, ` +
-            `  birthdate      DATE, ` +
-            `  hash           TEXT NOT NULL, ` +
-            `  salt           TEXT NOT NULL, ` +
-            `  created_at     TIMESTAMP NOT NULL, ` +
-            `  role_key       TEXT NOT NULL ` +
-            `      CONSTRAINT FK_User_RoleKey ` +
-            `      REFERENCES Roles(key) ` +
+            `  id               BIGSERIAL PRIMARY KEY NOT NULL, ` +
+            `  user_name        TEXT NOT NULL ` +
+            `       CONSTRAINT  uq_user_name ` +
+            `       UNIQUE, ` +
+            `  first_name       TEXT, ` +
+            `  last_name        TEXT, ` +
+            `  email            TEXT UNIQUE NOT NULL, ` +
+            `  email_validated  BOOLEAN NOT NULL, ` +
+            `  birthdate        DATE, ` +
+            `  hash             TEXT NOT NULL, ` +
+            `  salt             TEXT NOT NULL, ` +
+            `  created_at       TIMESTAMP NOT NULL, ` +
+            `  role_key         TEXT NOT NULL ` +
+            `      CONSTRAINT   fk_user_role_key ` +
+            `      REFERENCES   Roles(key) ` +
             `);`
           );
         }

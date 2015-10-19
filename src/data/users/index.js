@@ -1,4 +1,3 @@
-const Immutable = require('immutable');
 const queries = require('../utility/queries');
 
 class Users {
@@ -7,101 +6,93 @@ class Users {
   }
 
   createUser(newUserDetails) {
-    let userDetails = newUserDetails;
-    if (Immutable.Map.isMap(newUserDetails)) {
-      userDetails = newUserDetails.toObject();
-    }
-
     const connectionString = `postgresql://${this.config.db.username}:${this.config.db.password}@${this.config.db.address}/${this.config.db.database}`;
 
     return new Promise(
       (resolve, reject) => {
-        if (!userDetails.hasOwnProperty('username')) {
-          return reject(new Error('createUser requires the "username" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('username')) {
+          return reject(new Error('createUser requires the username parameter to be set.'));
         }
 
-        if (!userDetails.hasOwnProperty('hash')) {
-          return reject(new Error('createUser requires the "hash" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('hash')) {
+          return reject(new Error('createUser requires the hash parameter to be set.'));
         }
 
-        if (!userDetails.hasOwnProperty('salt')) {
-          return reject(new Error('createUser requires the "salt" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('salt')) {
+          return reject(new Error('createUser requires the salt parameter to be set.'));
         }
 
-        if (!userDetails.hasOwnProperty('createdAt')) {
-          return reject(new Error('createUser requires the "createdAt" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('createdAt')) {
+          return reject(new Error('createUser requires the createdAt parameter to be set.'));
         }
 
-        if (!userDetails.hasOwnProperty('role')) {
-          return reject(new Error('createUser requires the "role" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('role')) {
+          return reject(new Error('createUser requires the role parameter to be set.'));
         }
 
-        if (!userDetails.hasOwnProperty('email')) {
-          return reject(new Error('createUser requires the "email" parameter to be set'));
+        if (!newUserDetails.hasOwnProperty('email')) {
+          return reject(new Error('createUser requires the email parameter to be set.'));
         }
 
         queries.withParams(
           connectionString,
-          'SELECT * FROM Roles WHERE key = $1;',
-          [ userDetails.role ]
-        ).then(
-          (result) => {
-            if (result.rows.length <= 0) {
-              return reject(new Error(`createUser failed because role "${userDetails.role}" does not exist.`));
-            }
-
-            return queries.withParams(
-              connectionString,
-              `INSERT INTO Users ` +
-              `( ` +
-              `  user_name, ` +
-              `  first_name, ` +
-              `  last_name, ` +
-              `  email, ` +
-              `  birthdate, ` +
-              `  hash, ` +
-              `  salt, ` +
-              `  created_at, ` +
-              `  role_key ` +
-              `) ` +
-              `VALUES ` +
-              `( ` +
-              `  $1, ` +
-              `  $2, ` +
-              `  $3, ` +
-              `  $4, ` +
-              `  $5, ` +
-              `  $6, ` +
-              `  $7, ` +
-              `  $8, ` +
-              `  $9 ` +
-              `) ` +
-              `RETURNING id;`,
-              [
-                userDetails.username,
-                userDetails.firstName,
-                userDetails.lastName,
-                userDetails.email,
-                userDetails.birthdate,
-                userDetails.hash,
-                userDetails.salt,
-                userDetails.createdAt,
-                userDetails.role
-              ]
-            );
-          }
+          `INSERT INTO Users ` +
+          `( ` +
+          `  user_name, ` +
+          `  first_name, ` +
+          `  last_name, ` +
+          `  email, ` +
+          `  email_validated, ` +
+          `  birthdate, ` +
+          `  hash, ` +
+          `  salt, ` +
+          `  created_at, ` +
+          `  role_key ` +
+          `) ` +
+          `VALUES ` +
+          `( ` +
+          `  $1, ` +
+          `  $2, ` +
+          `  $3, ` +
+          `  $4, ` +
+          `  FALSE, ` +
+          `  $5, ` +
+          `  $6, ` +
+          `  $7, ` +
+          `  $8, ` +
+          `  $9 ` +
+          `) ` +
+          `RETURNING id;`,
+          [
+            newUserDetails.username,
+            newUserDetails.firstName,
+            newUserDetails.lastName,
+            newUserDetails.email,
+            newUserDetails.birthdate,
+            newUserDetails.hash,
+            newUserDetails.salt,
+            newUserDetails.createdAt,
+            newUserDetails.role
+          ]
         ).then(
           (result) => {
             const id = parseInt(result.rows[0].id, 10);
-            return resolve(this.readUserById(id));
+            this.readUserById(id)
+              .then(
+                (readUserResult) => {
+                  return resolve(readUserResult);
+                }
+              );
           }
         ).catch(
           (error) => {
             if (error.hasOwnProperty('constraint')) {
-              if (error.constraint === 'users_user_name_key') {
-                return reject(new Error(`username "${userDetails.username}" is already registered to an account`));
+              if (error.constraint === 'fk_user_role_key') {
+                return reject(new Error(`createUser failed because role ${newUserDetails.role} does not exist.`));
               } else if (error.constraint === 'users_email_key') {
-                return reject(new Error(`email "${userDetails.email}" is already registered to an account`));
+                return reject(new Error(`email ${newUserDetails.email} is already registered to an account.`));
+              } else if (error.constraint === 'uq_user_name') {
+                return reject(new Error(`Cannot set username to ${newUserDetails.username}, username already in use.`));
               }
             }
 
@@ -116,7 +107,7 @@ class Users {
     return new Promise(
       (resolve, reject) => {
         if ((typeof userId !== 'number') || ((userId % 1) !== 0)) {
-          return reject(new Error(`Invalid id entered (will never find "${userId}")`));
+          return reject(new Error(`Invalid id entered (will never find ${userId})`));
         }
 
         const connectionString = `postgresql://${this.config.db.username}:${this.config.db.password}@${this.config.db.address}/${this.config.db.database}`;
@@ -128,23 +119,36 @@ class Users {
         ).then(
           (result) => {
             if (result.rowCount <= 0) {
-              return reject(new Error(`User not found (${userId})`));
+              return resolve(null);
             }
-            const targetUser = result.rows[0];
-            return resolve(
-              Immutable.Map({
-                id: targetUser.id,
-                username: targetUser.user_name,
-                firstName: targetUser.first_name,
-                lastName: targetUser.last_name,
-                email: targetUser.email,
-                birthdate: targetUser.birthdate,
-                hash: targetUser.hash,
-                salt: targetUser.salt,
-                createdAt: targetUser.created_at,
-                role: targetUser.role_key
-              })
-            );
+            const targetUser = {
+              username: result.rows[0].user_name,
+              firstName: result.rows[0].first_name,
+              lastName: result.rows[0].last_name,
+              email: result.rows[0].email,
+              emailValidated: result.rows[0].email_validated,
+              hash: result.rows[0].hash,
+              salt: result.rows[0].salt,
+              role: result.rows[0].role_key
+            };
+
+            targetUser.id = parseInt(result.rows[0].id, 10);
+
+            const birthdate = result.rows[0].birthdate;
+            if (birthdate !== null) {
+              targetUser.birthdate = new Date(birthdate);
+            } else {
+              targetUser.birthdate = null;
+            }
+
+            const createdAt = result.rows[0].created_at;
+            if (createdAt !== null) {
+              targetUser.createdAt = new Date(createdAt);
+            } else {
+              targetUser.createdAt = null;
+            }
+
+            return resolve(targetUser);
           }
         ).catch(
           (error) => {
@@ -155,12 +159,94 @@ class Users {
     );
   }
 
-  updateUser(userDetails) {
+  readUserByUsername(username) {
+    return new Promise(
+      (resolve, reject) => {
+        if ((username === null) || (username === '')) {
+          return reject(new Error('Cannot search for null or empty username.'));
+        }
 
+        const connectionString = `postgresql://${this.config.db.username}:${this.config.db.password}@${this.config.db.address}/${this.config.db.database}`;
+
+        queries.withParams(
+          connectionString,
+          `SELECT * FROM Users WHERE user_name = $1`,
+          [ username ]
+        ).then(
+          (result) => {
+            if (result.rowCount <= 0) {
+              return resolve(null);
+            }
+
+            const targetUser = {
+              username: result.rows[0].user_name,
+              firstName: result.rows[0].first_name,
+              lastName: result.rows[0].last_name,
+              email: result.rows[0].email,
+              emailValidated: result.rows[0].email_validated,
+              hash: result.rows[0].hash,
+              salt: result.rows[0].salt,
+              role: result.rows[0].role_key
+            };
+
+            targetUser.id = parseInt(result.rows[0].id, 10);
+
+            const birthdate = result.rows[0].birthdate;
+            if (birthdate !== null) {
+              targetUser.birthdate = new Date(birthdate);
+            } else {
+              targetUser.birthdate = null;
+            }
+
+            const createdAt = result.rows[0].created_at;
+            if (createdAt !== null) {
+              targetUser.createdAt = new Date(createdAt);
+            } else {
+              targetUser.createdAt = null;
+            }
+
+            return resolve(targetUser);
+          }
+        );
+      }
+    );
+  }
+
+  updateUser(userDetails) {
+    return new Promise(
+      (resolve, reject) => {
+        if (!userDetails.hasOwnProperty('id')) {
+          return reject(new Error('Cannot update user entry without id.'));
+        }
+
+        if (!userDetails.hasOwnProperty('username')) {
+          return reject(new Error('Cannot update user entry without username.'));
+        }
+
+        if (!userDetails.hasOwnProperty('email')) {
+          return reject(new Error('Cannot update user entry without email address.'));
+        }
+
+        this.readUserByUsername(userDetails.username)
+          .then(
+            (result) => {
+              if (result !== undefined) {
+                return reject(new Error(`Cannot change username to ${userDetails.username}, username already in use.`));
+              }
+
+              return resolve({});
+            }
+          )
+          .catch(
+            (error) => {
+              return reject(error);
+            }
+          );
+      }
+    );
   }
 
   deleteUserById(userId) {
-
   }
 }
 

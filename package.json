@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node ./bin/server.js",
     "pretest": "node ./test/db-rebuild.config.js",
-    "test": "mocha --compilers js:babel/register --require ./test/test_helper.js $(find test -name '*.spec.js')",
+    "test": "mocha --compilers js:babel/register $(find test -name '*.spec.js') --sort",
     "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
@@ -24,10 +24,8 @@
   },
   "devDependencies": {
     "babel": "^5.8.23",
-    "chai": "^3.2.0",
-    "chai-as-promised": "^5.1.0",
-    "chai-immutable": "^1.3.0",
-    "mocha": "^2.3.2",
-    "sinon": "^1.16.1"
+    "chai": "^3.3.0",
+    "mocha": "^2.3.3",
+    "sinon": "^1.17.1"
   }
 }
